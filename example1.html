@@ -1,0 +1,693 @@
+Claude finished the response
+You said: generate me a website animation like threejs but use gsap instead or use any 3d js libraries
+
+generate me a website animation like threejs but use gsap instead or use any 3d js libraries
+11:37 AM
+Claude responded: Here's your Cosmic Portal — a full 3D website animation combining Three.
+Viewed a file, created a file, read a file
+
+Here's your Cosmic Portal — a full 3D website animation combining Three.js for the 3D scene and GSAP for choreographed motion. Here's what's packed in:
+
+Three.js elements:
+
+    6,000-particle spiral galaxy with a custom GLSL shader (GPU-powered rotation and sine wave drift)
+    3 glowing torus rings that spin independently on multiple axes
+    Wireframe icosahedron pulsing at the core
+    A color-cycling orb that breathes with a sine pulse
+
+GSAP animation:
+
+    Staggered intro timeline — rings, orb, text, and CTA all fade in at orchestrated intervals
+    Scanning chromatic line that sweeps the screen on repeat
+    Mouse parallax — move your cursor to tilt the entire scene
+    Click "Enter the Void" — triggers a camera warp-speed fly-through the particle field, then resets
+
+The aesthetic is dark cosmic brutalism — monospace type, gradient chrome text, minimal UI floating over an infinite galaxy. Open the downloaded HTML file in any browser to experience it at full resolution.
+Cosmic animation
+Code · HTML 
+You said: add scroll animation with contents, and images also add particle collisions
+
+add scroll animation with contents, and images also add particle collisions
+11:40 AM
+Claude responded: Now I'll build the expanded version with scroll sections, content, SVG-generated images, and particle collision physics.
+Reading the existing animation file
+
+Now I'll build the expanded version with scroll sections, content, SVG-generated images, and particle collision physics.
+Created 2 files, ran a command, read a file
+Done
+
+Here's the fully upgraded Cosmic Portal — open the HTML file in any browser for the full experience. Here's everything that's new:
+
+Scroll animations (GSAP ScrollTrigger)
+
+    Camera Z-position is scrubbed by scroll — you physically fly deeper into the galaxy as you scroll down
+    Every text block, heading, tag, and image fades + slides in as it enters the viewport
+    Timeline steps cascade in with staggered delays
+    The collision particle layer fades in as you reach the physics section
+
+4 scrollable content sections covering Origin, Collision Physics, Capabilities (6 feature cards), and Nebulae — each with structured copy, stats, pills, and a timeline
+
+3 procedural SVG images generated at runtime with zero raster assets:
+
+    Spiral galaxy with 3 arms, 660 procedurally placed coloured stars
+    Elastic collision diagram with radial spark burst and velocity vectors
+    Layered nebula using 5 overlapping radial gradients + 220-star field
+
+Particle collision physics (Canvas 2D layer)
+
+    220 coloured particles running elastic Newtonian collision physics
+    Live collision counter in the corner
+    Mouse repulsion — sweep your cursor to create shockwaves
+    Soft glow halos + connection lines between nearby particles
+    Wall bounce, friction decay, velocity exchange on overlap
+
+Cosmic animation
+Code · HTML 
+
+Next time, try this in Cowork
+
+Hand off complex tasks for Claude to handle independently. Come back to finished results.
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+Cosmic animation · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmic Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--purple:#a78bfa;--cyan:#38bdf8;--green:#34d399;--pink:#f472b6;--amber:#fbbf24}
+html{scroll-behavior:smooth}
+body{background:#000;font-family:'Courier New',monospace;overflow-x:hidden;color:#fff}
+#canvas-wrap{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#collision-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:0}
+#scanline{position:fixed;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.6),transparent);z-index:100;pointer-events:none;opacity:0}
+#counter{position:fixed;bottom:1.5rem;right:1.5rem;font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.12);z-index:200;pointer-events:none;line-height:1.8}
+#scroll-container{position:relative;z-index:10}
+ 
+/* HERO */
+#hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;pointer-events:none;position:relative}
+#hero-title{font-size:clamp(2.5rem,8vw,6rem);font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:transparent;background:linear-gradient(135deg,var(--purple),var(--cyan),var(--green),var(--pink));-webkit-background-clip:text;background-clip:text;line-height:1.05;opacity:0;transform:translateY(50px)}
+#hero-sub{margin-top:1.5rem;font-size:clamp(.75rem,2vw,1rem);letter-spacing:.4em;color:rgba(255,255,255,.35);opacity:0;transform:translateY(20px)}
+#hero-cta{margin-top:3rem;padding:1rem 3rem;border:1px solid rgba(167,139,250,.4);color:rgba(167,139,250,.9);font-family:'Courier New',monospace;font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;cursor:pointer;pointer-events:all;background:rgba(167,139,250,.05);opacity:0;transform:translateY(20px);transition:background .3s,border-color .3s,color .3s}
+#hero-cta:hover{background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.8);color:#fff}
+#scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);font-size:.6rem;letter-spacing:.3em;color:rgba(255,255,255,.18);animation:bob 2s infinite;pointer-events:none}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
+ 
+/* SECTIONS */
+.section{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:6rem 2rem;position:relative}
+.section-inner{max-width:1100px;width:100%;display:grid;gap:4rem;align-items:center}
+.two-col{grid-template-columns:1fr 1fr}
+.one-col{grid-template-columns:1fr;max-width:780px;text-align:center}
+.tag{font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--purple);margin-bottom:.8rem;opacity:0;transform:translateY(18px)}
+.divline{width:50px;height:1px;background:linear-gradient(90deg,var(--purple),transparent);margin:.8rem 0;opacity:0}
+.divline.c{margin:.8rem auto}
+.h2{font-size:clamp(1.8rem,3.5vw,3rem);font-weight:900;letter-spacing:.04em;line-height:1.1;opacity:0;transform:translateY(28px)}
+.g1{color:transparent;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text}
+.g2{color:transparent;background:linear-gradient(90deg,var(--pink),var(--amber));-webkit-background-clip:text;background-clip:text}
+.g3{color:transparent;background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text}
+.body{margin-top:1.3rem;font-size:.95rem;line-height:1.9;color:rgba(255,255,255,.42);opacity:0;transform:translateY(18px)}
+.pills{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.8rem;opacity:0;transform:translateY(18px)}
+.pill{padding:.35rem 1rem;border:1px solid rgba(255,255,255,.1);border-radius:999px;font-size:.68rem;letter-spacing:.18em;color:rgba(255,255,255,.4)}
+.pill.on{border-color:var(--purple);color:var(--purple)}
+ 
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2.5rem;opacity:0;transform:translateY(18px)}
+.stat-n{font-size:2.6rem;font-weight:900;color:transparent;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text}
+.stat-l{font-size:.6rem;letter-spacing:.28em;color:rgba(255,255,255,.28);margin-top:.3rem}
+ 
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.5rem}
+.card{padding:1.8rem 1.4rem;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);position:relative;overflow:hidden;opacity:0;transform:translateY(38px)}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(167,139,250,.04),transparent);pointer-events:none}
+.card-top{position:absolute;top:0;left:0;right:0;height:1.5px}
+.card:nth-child(1) .card-top{background:linear-gradient(90deg,var(--purple),transparent)}
+.card:nth-child(2) .card-top{background:linear-gradient(90deg,var(--cyan),transparent)}
+.card:nth-child(3) .card-top{background:linear-gradient(90deg,var(--pink),transparent)}
+.card:nth-child(4) .card-top{background:linear-gradient(90deg,var(--amber),transparent)}
+.card:nth-child(5) .card-top{background:linear-gradient(90deg,var(--green),transparent)}
+.card:nth-child(6) .card-top{background:linear-gradient(90deg,var(--purple),var(--cyan))}
+.ci{font-size:1.8rem;margin-bottom:.9rem}
+.ct{font-size:.88rem;letter-spacing:.1em;margin-bottom:.6rem}
+.cb{font-size:.75rem;line-height:1.75;color:rgba(255,255,255,.32)}
+ 
+/* SVG FRAMES */
+.img-frame{opacity:0;transform:scale(.93)}
+.img-frame svg{width:100%;height:auto;border:1px solid rgba(255,255,255,.06);display:block}
+.img-cap{font-size:.6rem;letter-spacing:.22em;color:rgba(255,255,255,.22);margin-top:.9rem;text-align:center}
+ 
+/* TIMELINE */
+.tl{position:relative;padding-left:2rem;margin-top:1.8rem}
+.tl::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--purple),var(--cyan),var(--green))}
+.tl-item{margin-bottom:2.2rem;position:relative;opacity:0;transform:translateX(-18px)}
+.tl-dot{position:absolute;left:-2.3rem;top:.35rem;width:9px;height:9px;border-radius:50%}
+.tl-yr{font-size:.6rem;letter-spacing:.28em;color:var(--cyan);margin-bottom:.3rem}
+.tl-t{font-size:.9rem;font-weight:700;margin-bottom:.35rem}
+.tl-b{font-size:.75rem;line-height:1.7;color:rgba(255,255,255,.32)}
+ 
+/* CTA section */
+.cta-box{border:1px solid rgba(167,139,250,.18);padding:4rem 3rem;text-align:center;position:relative;overflow:hidden;opacity:0;transform:translateY(28px)}
+.cta-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(167,139,250,.05),transparent 70%)}
+.cta-big{font-size:clamp(1.4rem,3.5vw,2.8rem);font-weight:900;letter-spacing:.08em;margin:1rem 0 1.5rem}
+.cta-note{color:rgba(255,255,255,.28);font-size:.82rem;line-height:1.8;margin-bottom:2.5rem}
+.cta-btn{display:inline-block;padding:1rem 3.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-family:'Courier New',monospace;font-size:.8rem;letter-spacing:.28em;text-transform:uppercase;cursor:pointer;font-weight:700;border:none;transition:opacity .3s,transform .3s;position:relative}
+.cta-btn:hover{opacity:.85;transform:translateY(-2px)}
+ 
+footer{padding:2.5rem 2rem;text-align:center;font-size:.6rem;letter-spacing:.3em;color:rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.05)}
+ 
+@media(max-width:768px){
+  .two-col{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+ 
+<div id="canvas-wrap"></div>
+<canvas id="collision-canvas"></canvas>
+<div id="scanline"></div>
+<div id="counter">
+  PARTICLES: <span id="pcount">0</span><br>
+  COLLISIONS: <span id="ccount">0</span>
+</div>
+ 
+<div id="scroll-container">
+ 
+  <!-- ─── HERO ─── -->
+  <section id="hero" class="section">
+    <div id="hero-title">COSMIC<br>PORTAL</div>
+    <div id="hero-sub">traverse the infinite</div>
+    <button id="hero-cta">Enter the Void ✦</button>
+    <div id="scroll-hint">↓ &nbsp; scroll &nbsp; ↓</div>
+  </section>
+ 
+  <!-- ─── S1 · ORIGIN ─── -->
+  <section class="section" style="background:rgba(0,0,0,.35)">
+    <div class="section-inner two-col">
+      <div>
+        <div class="tag r">01 — Origin</div>
+        <div class="divline r"></div>
+        <h2 class="h2 r">Born from <span class="g1">stellar dust</span> and quantum noise</h2>
+        <p class="body r">Every particle in the universe carries the memory of the Big Bang. This page runs a real-time spiral galaxy of 6,000 GPU-computed particles — each one a tiny star obeying gravitational dynamics written in GLSL shader code.</p>
+        <div class="pills r">
+          <span class="pill on">Three.js r128</span>
+          <span class="pill on">GLSL Shaders</span>
+          <span class="pill on">WebGL</span>
+          <span class="pill on">GSAP 3.12</span>
+          <span class="pill">ScrollTrigger</span>
+        </div>
+        <div class="stats r">
+          <div><div class="stat-n">6K</div><div class="stat-l">Particles</div></div>
+          <div><div class="stat-n">60</div><div class="stat-l">FPS Target</div></div>
+          <div><div class="stat-n">∞</div><div class="stat-l">Iterations</div></div>
+        </div>
+      </div>
+      <div class="img-frame r">
+        <!-- Procedural spiral galaxy SVG -->
+        <svg viewBox="0 0 460 460" xmlns="http://www.w3.org/2000/svg" style="background:#000810">
+          <defs>
+            <radialGradient id="gc" cx="50%" cy="50%" r="38%">
+              <stop offset="0%" stop-color="#c4b5fd" stop-opacity=".95"/>
+              <stop offset="40%" stop-color="#818cf8" stop-opacity=".5"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g id="sg-stars"></g>
+          <g id="sg-arms"></g>
+          <ellipse cx="230" cy="230" rx="55" ry="55" fill="url(#gc)"/>
+          <ellipse cx="230" cy="230" rx="14" ry="14" fill="#e0d9ff" opacity=".98"/>
+          <ellipse cx="230" cy="230" rx="5" ry="5" fill="#fff"/>
+          <script>
+            (function(){
+              var ns='http://www.w3.org/2000/svg';
+              var sb=document.getElementById('sg-stars');
+              var sa=document.getElementById('sg-arms');
+              var pal=['#a78bfa','#38bdf8','#34d399','#f472b6','#fbbf24','#e0e7ff'];
+              for(var i=0;i<140;i++){
+                var c=document.createElementNS(ns,'circle');
+                c.setAttribute('cx',Math.random()*460);
+                c.setAttribute('cy',Math.random()*460);
+                c.setAttribute('r',(Math.random()*.9+.15).toFixed(2));
+                c.setAttribute('fill','rgba(255,255,255,'+(Math.random()*.35+.05).toFixed(2)+')');
+                sb.appendChild(c);
+              }
+              for(var arm=0;arm<3;arm++){
+                for(var i=0;i<220;i++){
+                  var t=i/220;
+                  var r=t*200+6;
+                  var ang=t*Math.PI*5+(arm/3)*Math.PI*2;
+                  var sp=r*.16;
+                  var x=230+Math.cos(ang)*r+(Math.random()-.5)*sp;
+                  var y=230+Math.sin(ang)*r+(Math.random()-.5)*sp;
+                  var c=document.createElementNS(ns,'circle');
+                  c.setAttribute('cx',x.toFixed(1));
+                  c.setAttribute('cy',y.toFixed(1));
+                  c.setAttribute('r',(Math.random()*2.2+.4).toFixed(2));
+                  c.setAttribute('fill',pal[Math.floor(Math.random()*pal.length)]);
+                  c.setAttribute('opacity',(Math.random()*.65+.25).toFixed(2));
+                  sa.appendChild(c);
+                }
+              }
+            })();
+          </script>
+        </svg>
+        <div class="img-cap">Procedural Spiral Galaxy · 3 Arms · GPU Rendered</div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ─── S2 · PHYSICS ─── -->
+  <section class="section">
+    <div class="section-inner two-col">
+      <div class="img-frame r">
+        <!-- Collision physics SVG -->
+        <svg viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg" style="background:#030312">
+          <defs>
+            <radialGradient id="pa" cx="34%" cy="50%" r="32%">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity=".9"/>
+              <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="pb" cx="66%" cy="50%" r="32%">
+              <stop offset="0%" stop-color="#f472b6" stop-opacity=".9"/>
+              <stop offset="100%" stop-color="#f472b6" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g id="col-sparks"></g>
+          <line x1="52" y1="180" x2="186" y2="180" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="5 4" opacity=".45"/>
+          <line x1="408" y1="180" x2="274" y2="180" stroke="#f472b6" stroke-width="1.2" stroke-dasharray="5 4" opacity=".45"/>
+          <polygon points="178,176 196,180 178,184" fill="#a78bfa" opacity=".75"/>
+          <polygon points="282,176 264,180 282,184" fill="#f472b6" opacity=".75"/>
+          <circle cx="158" cy="180" r="44" fill="url(#pa)" opacity=".28"/>
+          <circle cx="158" cy="180" r="28" fill="#a78bfa" opacity=".12"/>
+          <circle cx="158" cy="180" r="17" fill="#a78bfa" opacity=".55"/>
+          <circle cx="158" cy="180" r="9" fill="#c4b5fd"/>
+          <circle cx="302" cy="180" r="44" fill="url(#pb)" opacity=".28"/>
+          <circle cx="302" cy="180" r="28" fill="#f472b6" opacity=".12"/>
+          <circle cx="302" cy="180" r="17" fill="#f472b6" opacity=".55"/>
+          <circle cx="302" cy="180" r="9" fill="#f9a8d4"/>
+          <g id="impact"></g>
+          <text x="158" y="224" text-anchor="middle" fill="#a78bfa" font-size="9.5" font-family="Courier New" letter-spacing="2.5">MASS A</text>
+          <text x="302" y="224" text-anchor="middle" fill="#f472b6" font-size="9.5" font-family="Courier New" letter-spacing="2.5">MASS B</text>
+          <text x="230" y="136" text-anchor="middle" fill="rgba(255,255,255,.25)" font-size="8.5" font-family="Courier New" letter-spacing="1.5">COLLISION POINT</text>
+          <line x1="230" y1="145" x2="230" y2="161" stroke="rgba(255,255,255,.15)" stroke-width=".8"/>
+          <text x="90" y="260" text-anchor="middle" fill="rgba(255,255,255,.18)" font-size="8" font-family="Courier New">v₁ → </text>
+          <text x="370" y="260" text-anchor="middle" fill="rgba(255,255,255,.18)" font-size="8" font-family="Courier New"> ← v₂</text>
+          <script>
+            (function(){
+              var ns='http://www.w3.org/2000/svg';
+              var sp=document.getElementById('col-sparks');
+              var im=document.getElementById('impact');
+              var pal=['#a78bfa','#f472b6','#38bdf8','#fbbf24','#34d399','#fff'];
+              for(var i=0;i<20;i++){
+                var ang=(i/20)*Math.PI*2;
+                var len=18+Math.random()*52;
+                var ln=document.createElementNS(ns,'line');
+                ln.setAttribute('x1',230);ln.setAttribute('y1',180);
+                ln.setAttribute('x2',230+Math.cos(ang)*len);
+                ln.setAttribute('y2',180+Math.sin(ang)*len);
+                ln.setAttribute('stroke',pal[i%pal.length]);
+                ln.setAttribute('stroke-width',(Math.random()*1.4+.4).toFixed(2));
+                ln.setAttribute('opacity',(Math.random()*.55+.18).toFixed(2));
+                im.appendChild(ln);
+              }
+              for(var i=0;i<32;i++){
+                var ang=Math.random()*Math.PI*2;
+                var r=18+Math.random()*65;
+                var c=document.createElementNS(ns,'circle');
+                c.setAttribute('cx',230+Math.cos(ang)*r);
+                c.setAttribute('cy',180+Math.sin(ang)*r);
+                c.setAttribute('r',(Math.random()*2.2+.4).toFixed(2));
+                c.setAttribute('fill',pal[Math.floor(Math.random()*pal.length)]);
+                c.setAttribute('opacity',(Math.random()*.6+.2).toFixed(2));
+                sp.appendChild(c);
+              }
+            })();
+          </script>
+        </svg>
+        <div class="img-cap">Elastic Collision Diagram · Newtonian Physics</div>
+      </div>
+      <div>
+        <div class="tag r">02 — Physics</div>
+        <div class="divline r"></div>
+        <h2 class="h2 r">Particle <span class="g2">collision</span> dynamics</h2>
+        <p class="body r">220 active particles run elastic Newtonian collision physics on a Canvas 2D layer, decoupled from Three.js. Each frame, every particle checks its neighbours — when two overlap, momentum is exchanged along the collision normal.</p>
+        <p class="body r" style="margin-top:.8rem">Move your cursor across the screen to create repulsion shockwaves in the live particle field — watch the collision counter climb.</p>
+        <div class="tl r">
+          <div class="tl-item">
+            <div class="tl-dot" style="background:var(--purple);box-shadow:0 0 10px var(--purple)"></div>
+            <div class="tl-yr">STEP 01</div>
+            <div class="tl-t">Proximity Detection</div>
+            <div class="tl-b">Each frame, particles query neighbours within their combined radii — O(n²) brute force kept fast by a small particle count.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:var(--cyan);box-shadow:0 0 10px var(--cyan)"></div>
+            <div class="tl-yr">STEP 02</div>
+            <div class="tl-t">Velocity Exchange</div>
+            <div class="tl-b">Colliding particles swap velocity components along the collision normal — conserving momentum for elastic equal-mass collisions.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:var(--green);box-shadow:0 0 10px var(--green)"></div>
+            <div class="tl-yr">STEP 03</div>
+            <div class="tl-t">Energy Dissipation</div>
+            <div class="tl-b">A 0.3% friction bleed per frame lets bursts decay naturally into ambient drift — infinite energy injection from mouse repulsion keeps it alive.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ─── S3 · FEATURE CARDS ─── -->
+  <section class="section" style="background:rgba(0,0,0,.4)">
+    <div class="section-inner one-col">
+      <div>
+        <div class="tag r" style="text-align:center">03 — Capabilities</div>
+        <div class="divline c r"></div>
+        <h2 class="h2 r">What lives <span class="g3">inside the portal</span></h2>
+        <p class="body r">Browser-native technologies woven into a continuous living visual system — no frameworks, no build tools, no raster assets.</p>
+      </div>
+      <div class="cards">
+        <div class="card r"><div class="card-top"></div><div class="ci">✦</div><div class="ct">GLSL Shaders</div><div class="cb">Custom vertex and fragment shaders drive every galaxy particle — GPU-computed rotation, size attenuation, soft circular sprites.</div></div>
+        <div class="card r"><div class="card-top"></div><div class="ci">◈</div><div class="ct">ScrollTrigger</div><div class="cb">GSAP ScrollTrigger scrubs camera Z-position and orchestrates every reveal — all synchronised to your scroll position.</div></div>
+        <div class="card r"><div class="card-top"></div><div class="ci">⬡</div><div class="ct">Collision Physics</div><div class="cb">Canvas 2D elastic physics layer running 220 particles with Newtonian velocity exchange and mouse repulsion shockwaves.</div></div>
+        <div class="card r"><div class="card-top"></div><div class="ci">⊛</div><div class="ct">Parallax Mouse</div><div class="cb">Smooth lag-interpolated parallax ties camera position to your cursor — gentle inertia gives the scene organic gravitational weight.</div></div>
+        <div class="card r"><div class="card-top"></div><div class="ci">◉</div><div class="ct">Procedural SVG Art</div><div class="cb">Every image — galaxy, collision diagram, nebula — is generated at runtime using SVG math. Zero raster assets loaded.</div></div>
+        <div class="card r"><div class="card-top"></div><div class="ci">⟡</div><div class="ct">Warp Drive</div><div class="cb">Click "Enter the Void" to trigger a GSAP-orchestrated camera fly-through — particle size explodes as you accelerate into the core.</div></div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ─── S4 · NEBULA ─── -->
+  <section class="section">
+    <div class="section-inner two-col">
+      <div>
+        <div class="tag r">04 — Deep Space</div>
+        <div class="divline r"></div>
+        <h2 class="h2 r">Nebulae — <span class="g1">stellar nurseries</span></h2>
+        <p class="body r">Within vast clouds of interstellar gas and dust, gravity slowly compresses pockets of matter until nuclear fusion ignites — a new star is born. The colours are ionised gases glowing under intense UV radiation.</p>
+        <p class="body r" style="margin-top:.9rem">The image to the right is a procedurally generated nebula using layered SVG radial gradients and a seeded star field — every render produces a unique composition.</p>
+        <div class="stats r" style="grid-template-columns:repeat(2,1fr)">
+          <div><div class="stat-n" style="font-size:2rem">10K</div><div class="stat-l">Light Years Wide</div></div>
+          <div><div class="stat-n" style="font-size:2rem">~1M</div><div class="stat-l">Years to Form a Star</div></div>
+        </div>
+      </div>
+      <div class="img-frame r">
+        <!-- Procedural nebula SVG -->
+        <svg viewBox="0 0 460 460" xmlns="http://www.w3.org/2000/svg" style="background:#010109">
+          <defs>
+            <radialGradient id="nb1" cx="38%" cy="44%" r="52%"><stop offset="0%" stop-color="#a78bfa" stop-opacity=".72"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+            <radialGradient id="nb2" cx="62%" cy="56%" r="46%"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".55"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+            <radialGradient id="nb3" cx="50%" cy="28%" r="36%"><stop offset="0%" stop-color="#f472b6" stop-opacity=".48"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+            <radialGradient id="nb4" cx="28%" cy="66%" r="32%"><stop offset="0%" stop-color="#34d399" stop-opacity=".38"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+            <radialGradient id="nb5" cx="72%" cy="34%" r="30%"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".32"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="460" height="460" fill="#010109"/>
+          <ellipse cx="175" cy="202" rx="215" ry="185" fill="url(#nb1)"/>
+          <ellipse cx="285" cy="258" rx="195" ry="168" fill="url(#nb2)"/>
+          <ellipse cx="230" cy="128" rx="155" ry="128" fill="url(#nb3)"/>
+          <ellipse cx="128" cy="305" rx="135" ry="115" fill="url(#nb4)"/>
+          <ellipse cx="332" cy="155" rx="125" ry="105" fill="url(#nb5)"/>
+          <g id="nb-stars"></g>
+          <circle cx="112" cy="92" r="2.8" fill="#fff" opacity=".92"/>
+          <circle cx="112" cy="92" r="7" fill="#a78bfa" opacity=".22"/>
+          <circle cx="348" cy="325" r="2.2" fill="#38bdf8" opacity=".95"/>
+          <circle cx="348" cy="325" r="6" fill="#38bdf8" opacity=".16"/>
+          <circle cx="230" cy="230" r="1.8" fill="#fff"/>
+          <circle cx="230" cy="230" r="5" fill="#f472b6" opacity=".22"/>
+          <script>
+            (function(){
+              var ns='http://www.w3.org/2000/svg';
+              var g=document.getElementById('nb-stars');
+              for(var i=0;i<220;i++){
+                var c=document.createElementNS(ns,'circle');
+                c.setAttribute('cx',(Math.random()*460).toFixed(1));
+                c.setAttribute('cy',(Math.random()*460).toFixed(1));
+                c.setAttribute('r',(Math.random()*1.1+.18).toFixed(2));
+                c.setAttribute('fill','rgba(255,255,255,'+(Math.random()*.45+.06).toFixed(2)+')');
+                g.appendChild(c);
+              }
+            })();
+          </script>
+        </svg>
+        <div class="img-cap">Procedural Nebula · Layered SVG Gradients · Runtime Generated</div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ─── CTA ─── -->
+  <section class="section" style="background:rgba(0,0,0,.5);min-height:60vh">
+    <div style="width:100%;max-width:820px">
+      <div class="cta-box r">
+        <div class="tag" style="opacity:1;text-align:center">Ready to explore?</div>
+        <div class="cta-big">Enter the <span style="color:var(--purple)">Portal</span></div>
+        <p class="cta-note">Scroll back to the top and click "Enter the Void" to trigger the warp-speed particle fly-through. The collision counter will keep climbing as long as this page is open.</p>
+        <button class="cta-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to Origin ↑</button>
+      </div>
+    </div>
+  </section>
+ 
+  <footer>COSMIC PORTAL &nbsp;·&nbsp; THREE.JS + GSAP + CANVAS 2D &nbsp;·&nbsp; WEBGL &nbsp;·&nbsp; ALL ASSETS PROCEDURAL &nbsp;·&nbsp; ∞</footer>
+ 
+</div>
+ 
+<script>
+/* ═══════════════════════════════════════
+   THREE.JS
+═══════════════════════════════════════ */
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);
+camera.position.z=5;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x000000,1);
+document.getElementById('canvas-wrap').appendChild(renderer.domElement);
+const clock=new THREE.Clock();
+ 
+/* galaxy */
+const PC=6000;
+const pos=new Float32Array(PC*3),col=new Float32Array(PC*3),sz=new Float32Array(PC);
+const pal=[new THREE.Color('#a78bfa'),new THREE.Color('#38bdf8'),new THREE.Color('#34d399'),new THREE.Color('#f472b6'),new THREE.Color('#fbbf24')];
+for(let i=0;i<PC;i++){
+  const i3=i*3,r=Math.random()*8+.5,sp=r*5,br=((i%3)/3)*Math.PI*2;
+  pos[i3]=Math.cos(br+sp)*r+(Math.random()**3)*(Math.random()<.5?1:-1)*.6;
+  pos[i3+1]=(Math.random()**3)*(Math.random()<.5?1:-1)*.6;
+  pos[i3+2]=Math.sin(br+sp)*r+(Math.random()**3)*(Math.random()<.5?1:-1)*.6;
+  const fc=pal[Math.floor(Math.random()*pal.length)].clone().lerp(new THREE.Color(1,1,1),Math.random()*.4);
+  col[i3]=fc.r;col[i3+1]=fc.g;col[i3+2]=fc.b;
+  sz[i]=Math.random()*3+.5;
+}
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+geo.setAttribute('size',new THREE.BufferAttribute(sz,1));
+const mat=new THREE.ShaderMaterial({
+  vertexColors:true,transparent:true,depthWrite:false,
+  uniforms:{uTime:{value:0},uSize:{value:renderer.getPixelRatio()*150},uScroll:{value:0}},
+  vertexShader:`attribute float size;varying vec3 vColor;uniform float uTime,uSize,uScroll;
+    void main(){vColor=color;vec3 p=position;
+      float a=uTime*.12+uScroll*.4;float c=cos(a),s=sin(a);
+      float x=p.x*c-p.z*s,z=p.x*s+p.z*c;p.x=x;p.z=z;
+      p.y+=sin(uTime*.3+p.x*.5)*.05;
+      vec4 mv=modelViewMatrix*vec4(p,1.);
+      gl_PointSize=size*uSize/-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`varying vec3 vColor;
+    void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
+      float a=1.-smoothstep(.2,.5,d);gl_FragColor=vec4(vColor,a*.9);}`
+});
+const particles=new THREE.Points(geo,mat);
+scene.add(particles);
+document.getElementById('pcount').textContent=PC.toLocaleString();
+ 
+/* rings */
+const mkRing=(r,t,c)=>{const m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0});const mesh=new THREE.Mesh(new THREE.TorusGeometry(r,t,16,120),m);scene.add(mesh);return{mesh,mat:m};};
+const r1=mkRing(1.6,.04,0xa78bfa),r2=mkRing(2.1,.02,0x38bdf8),r3=mkRing(2.6,.015,0x34d399);
+const orbMat=new THREE.MeshBasicMaterial({color:0xa78bfa,transparent:true,opacity:0});
+const orb=new THREE.Mesh(new THREE.SphereGeometry(.4,32,32),orbMat);scene.add(orb);
+const icoMat=new THREE.MeshBasicMaterial({color:0xf472b6,wireframe:true,transparent:true,opacity:0});
+const ico=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),icoMat);scene.add(ico);
+ 
+/* mouse */
+let mx=0,my=0,tmx=0,tmy=0;
+window.addEventListener('mousemove',e=>{tmx=(e.clientX/innerWidth-.5)*2;tmy=-(e.clientY/innerHeight-.5)*2;});
+ 
+/* GSAP */
+gsap.registerPlugin(ScrollTrigger);
+const intro=gsap.timeline({delay:.4});
+intro
+  .to(r1.mat,{opacity:.7,duration:2,ease:'power2.out'},.2)
+  .to(r2.mat,{opacity:.5,duration:2},.5)
+  .to(r3.mat,{opacity:.3,duration:2},.8)
+  .to(orbMat,{opacity:.9,duration:1.5},.3)
+  .to(icoMat,{opacity:.25,duration:2},.6)
+  .to('#hero-title',{opacity:1,y:0,duration:1.2,ease:'power3.out'},1.2)
+  .to('#hero-sub',{opacity:1,y:0,duration:1,ease:'power3.out'},1.6)
+  .to('#hero-cta',{opacity:1,y:0,duration:1,ease:'power3.out'},1.9)
+  .to('#scanline',{opacity:1,duration:.5},1);
+gsap.to('#scanline',{y:'100vh',duration:4,ease:'none',repeat:-1,delay:1.5});
+ 
+/* scroll camera */
+ScrollTrigger.create({
+  trigger:'#scroll-container',start:'top top',end:'bottom bottom',
+  onUpdate(self){
+    mat.uniforms.uScroll.value=self.progress*8;
+    gsap.to(camera.position,{z:5-self.progress*3.2,duration:.4,ease:'none',overwrite:true});
+  }
+});
+ 
+/* reveals */
+gsap.utils.toArray('.r').forEach(el=>{
+  const isImg=el.classList.contains('img-frame');
+  gsap.fromTo(el,
+    {opacity:0,y:isImg?0:28,scale:isImg?.93:1},
+    {opacity:1,y:0,scale:1,duration:1,ease:'power3.out',
+     scrollTrigger:{trigger:el,start:'top 86%',toggleActions:'play none none reverse'}}
+  );
+});
+gsap.utils.toArray('.tl-item').forEach((el,i)=>{
+  gsap.fromTo(el,{opacity:0,x:-18},{opacity:1,x:0,duration:.8,delay:i*.12,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none reverse'}});
+});
+ 
+/* warp */
+document.getElementById('hero-cta').addEventListener('click',()=>{
+  gsap.to(camera.position,{z:.15,duration:3,ease:'power3.inOut'});
+  gsap.to([r1.mat,r2.mat,r3.mat,orbMat,icoMat],{opacity:0,duration:1.5,ease:'power2.in',delay:1.5});
+  gsap.to('#hero',{opacity:0,duration:1,delay:1});
+  gsap.to(mat.uniforms.uSize,{value:renderer.getPixelRatio()*450,duration:3,ease:'power3.inOut'});
+  setTimeout(()=>{
+    gsap.to(camera.position,{z:5,duration:.01});
+    gsap.to([r1.mat,r2.mat,r3.mat,orbMat,icoMat],{opacity:1,duration:2});
+    gsap.to('#hero',{opacity:1,duration:1.5});
+    gsap.to(mat.uniforms.uSize,{value:renderer.getPixelRatio()*150,duration:2});
+  },3300);
+});
+ 
+/* Three render */
+function animate3(){
+  requestAnimationFrame(animate3);
+  const t=clock.getElapsedTime();
+  mat.uniforms.uTime.value=t;
+  mx+=(tmx-mx)*.04; my+=(tmy-my)*.04;
+  camera.position.x+=(mx*.5-camera.position.x)*.05;
+  camera.position.y+=(my*.3-camera.position.y)*.05;
+  camera.lookAt(scene.position);
+  r1.mesh.rotation.x=t*.3;r1.mesh.rotation.y=t*.2;
+  r2.mesh.rotation.x=-t*.2;r2.mesh.rotation.z=t*.15;
+  r3.mesh.rotation.y=t*.25;r3.mesh.rotation.z=-t*.18;
+  ico.rotation.x=t*.4;ico.rotation.y=t*.3;
+  orb.scale.setScalar(Math.sin(t*2)*.1+1);
+  orb.material.color.setHSL((t*.05)%1,.8,.7);
+  renderer.render(scene,camera);
+}
+animate3();
+ 
+/* ═══════════════════════════════════════
+   CANVAS 2D COLLISION PHYSICS
+═══════════════════════════════════════ */
+const cc=document.getElementById('collision-canvas');
+const ctx=cc.getContext('2d');
+let W,H,collCount=0;
+function rsz(){W=cc.width=innerWidth;H=cc.height=innerHeight;}
+rsz();
+ 
+const N=220;
+const px=new Float32Array(N),py=new Float32Array(N);
+const vx=new Float32Array(N),vy=new Float32Array(N);
+const rad=new Float32Array(N);
+const cr=new Uint8Array(N),cg=new Uint8Array(N),cb=new Uint8Array(N);
+const CPAL=[[167,139,250],[56,189,248],[52,211,153],[244,114,182],[251,191,36]];
+const FRIC=0.9975;
+ 
+for(let i=0;i<N;i++){
+  px[i]=Math.random()*innerWidth;
+  py[i]=Math.random()*innerHeight;
+  const sp=.5+Math.random()*1.5,ang=Math.random()*Math.PI*2;
+  vx[i]=Math.cos(ang)*sp; vy[i]=Math.sin(ang)*sp;
+  rad[i]=5+Math.random()*5;
+  const c=CPAL[Math.floor(Math.random()*CPAL.length)];
+  cr[i]=c[0];cg[i]=c[1];cb[i]=c[2];
+}
+ 
+let pmx=W/2,pmy=H/2;
+window.addEventListener('mousemove',e=>{pmx=e.clientX;pmy=e.clientY;});
+ 
+function stepPhys(){
+  for(let i=0;i<N;i++){
+    const dx=px[i]-pmx,dy=py[i]-pmy,d2=dx*dx+dy*dy;
+    if(d2<9000&&d2>.001){const d=Math.sqrt(d2),f=90/d2;vx[i]+=dx/d*f;vy[i]+=dy/d*f;}
+    px[i]+=vx[i];py[i]+=vy[i];
+    vx[i]*=FRIC;vy[i]*=FRIC;
+    const r=rad[i];
+    if(px[i]<r){px[i]=r;vx[i]=Math.abs(vx[i]);}
+    if(px[i]>W-r){px[i]=W-r;vx[i]=-Math.abs(vx[i]);}
+    if(py[i]<r){py[i]=r;vy[i]=Math.abs(vy[i]);}
+    if(py[i]>H-r){py[i]=H-r;vy[i]=-Math.abs(vy[i]);}
+  }
+  for(let i=0;i<N;i++){
+    for(let j=i+1;j<N;j++){
+      const dx=px[j]-px[i],dy=py[j]-py[i],d2=dx*dx+dy*dy;
+      const md=(rad[i]+rad[j]);
+      if(d2<md*md&&d2>.0001){
+        collCount++;
+        const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
+        const ov=(md-d)*.5;
+        px[i]-=nx*ov;py[i]-=ny*ov;px[j]+=nx*ov;py[j]+=ny*ov;
+        const dv=(vx[i]-vx[j])*nx+(vy[i]-vy[j])*ny;
+        if(dv>0){vx[i]-=dv*nx;vy[i]-=dv*ny;vx[j]+=dv*nx;vy[j]+=dv*ny;}
+      }
+    }
+  }
+}
+ 
+function drawPhys(){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<N;i++){
+    for(let j=i+1;j<N;j++){
+      const dx=px[j]-px[i],dy=py[j]-py[i],d2=dx*dx+dy*dy;
+      if(d2<10000){
+        const a=(1-d2/10000)*.15;
+        ctx.beginPath();
+        ctx.strokeStyle=`rgba(${cr[i]},${cg[i]},${cb[i]},${a.toFixed(3)})`;
+        ctx.lineWidth=.5;
+        ctx.moveTo(px[i],py[i]);ctx.lineTo(px[j],py[j]);ctx.stroke();
+      }
+    }
+  }
+  for(let i=0;i<N;i++){
+    const g=ctx.createRadialGradient(px[i],py[i],0,px[i],py[i],rad[i]*2.8);
+    g.addColorStop(0,`rgba(${cr[i]},${cg[i]},${cb[i]},.5)`);
+    g.addColorStop(1,`rgba(${cr[i]},${cg[i]},${cb[i]},0)`);
+    ctx.beginPath();ctx.arc(px[i],py[i],rad[i]*2.8,0,Math.PI*2);
+    ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.arc(px[i],py[i],rad[i],0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr[i]},${cg[i]},${cb[i]},.82)`;ctx.fill();
+  }
+}
+ 
+/* reveal collision layer at S2 */
+ScrollTrigger.create({
+  trigger:'#scroll-container > section:nth-child(3)',
+  start:'top 75%',
+  onEnter:()=>{gsap.to('#collision-canvas',{opacity:.5,duration:1.8});}
+});
+ 
+let fr=0;
+function runPhys(){requestAnimationFrame(runPhys);fr++;stepPhys();if(fr%2===0)drawPhys();if(fr%45===0)document.getElementById('ccount').textContent=collCount.toLocaleString();}
+runPhys();
+ 
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);rsz();
+});
+</script>
+</body>
+</html>
+ 
+
